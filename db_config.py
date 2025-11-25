@@ -1,5 +1,6 @@
 import os 
 import time
+import pandas as pd
 import psycopg2
 
 
@@ -23,17 +24,22 @@ class PostgreSQL():
             print(f"Database connection failed: {e}")
             return False
 
-    def execute_query(self, query, many_query=False, values=None, select_query=False):
+    def execute_query(self, query, many_query=False, values=None, select_rowc_count_query=False, dataframe_query=False):
         if self.conn is not None:
             try: 
                 cursor = self.conn.cursor()
                 if many_query:
                     cursor.executemany(query, values)
-                elif select_query:
+                elif select_rowc_count_query:
                     cursor.execute(query)
                     row_count = cursor.fetchone()[0]
                     cursor.close()
                     return row_count
+                elif dataframe_query:
+                    df = pd.read_sql_query(query, self.conn)
+                    df.index += 1
+                    cursor.close()
+                    return df 
                 else:    
                     cursor.execute(query)
                 self.conn.commit()

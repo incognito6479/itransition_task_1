@@ -59,7 +59,7 @@ if db.connect():
     """)
     row_count = db.execute_query(
         """SELECT count(*) FROM books""", 
-        select_query=True
+        select_rowc_count_query=True
     )
     if row_count == 0:
         db.execute_query(
@@ -67,6 +67,30 @@ if db.connect():
             many_query=True, 
             values=prepare_to_insert()
         )
+        row_count = db.execute_query(
+            """SELECT count(*) FROM books""", 
+            select_rowc_count_query=True
+        )
+    print(f"Current number of rows: {row_count}")
+    df = db.execute_query(
+        """ SELECT 
+                year as publication_year, 
+                count(id) as book_count,
+                ROUND(
+                        AVG(
+                            CASE
+                                WHEN currency = 'EUR' THEN price * 1.2
+                                WHEN currency = 'USD' THEN price
+                            END
+                            ), 
+                    2) as average_price  
+            FROM books
+            GROUP BY publication_year
+            ORDER BY publication_year ASC
+        """, 
+        dataframe_query=True
+    )
+    print(df.to_string())
     db.close_conn()
 
 
